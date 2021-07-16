@@ -28,4 +28,30 @@ self.addEventListener('install', function (e) {
             return cache.addAll(FILES_TO_CACHE)
         })
     )
-})
+});
+
+// Activate the Service Worker
+// ==========================================
+self.addEventListener('activate', function (e) {
+    e.waitUntil(
+        // .keys() ret array of all cache names called keyList
+        caches.keys().then(function (keyList) {
+            let cacheKeeplist = keyList.filter(function (key) {
+                return key.indexOf(APP_PREFIX);
+            });
+            // add the current cache to the keeplist in the activate event listener,
+            cacheKeeplist.push(CACHE_NAME);
+
+            return Promise.all(
+                keyList.map(function (key, i) {
+                    if (cacheKeeplist.indexOf(key) === -1) {
+                        console.log('deleting cache : ' + keyList[i]);
+                        // return a Promise that resolves once all old versions are deleted
+                        return caches.delete(keyList[i]);
+                    }
+                })
+            );
+        })
+    );
+});
+
